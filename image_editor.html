@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixelmuse - Image Editor</title>
+    
+    <!-- Toast UI Image Editor -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/latest/tui-image-editor.css">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-darker: #0a0e27;
+            --bg-light: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+            --success: #10b981;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            font-size: 1.75rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Main Editor Area */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            background: var(--bg-dark);
+            position: relative;
+        }
+
+        #editor {
+            flex: 1;
+            overflow: auto;
+        }
+
+        /* Toolbar Customizations */
+        .tui-image-editor {
+            background: var(--bg-dark) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .tui-image-editor-menu {
+            background: var(--bg-light) !important;
+            border-color: var(--border) !important;
+        }
+
+        .tui-image-editor-menu-button {
+            color: var(--text-secondary) !important;
+        }
+
+        .tui-image-editor-menu-button:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .tui-image-editor-menu-button.active {
+            background: rgba(99, 102, 241, 0.2) !important;
+            color: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+
+        .tui-color-picker {
+            background: var(--bg-light) !important;
+        }
+
+        .tui-colorpicker-container {
+            background: var(--bg-light) !important;
+        }
+
+        .tui-colorpicker-input {
+            background: var(--bg-darker) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        /* Sidebar - Image Info */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-light);
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-light);
+            border-top: 1px solid var(--border);
+            padding: 0.875rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-left {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Hidden file input */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <span class="logo-icon">🎨</span>
+                <h1>Pixelmuse</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="openFileBtn" title="Open image (Ctrl+O)">
+                    📁 Open
+                </button>
+                <button class="btn btn-secondary" id="resetBtn" title="Reset all changes">
+                    ↺ Reset
+                </button>
+                <button class="btn btn-primary" id="downloadBtn" title="Download edited image (Ctrl+S)">
+                    ⬇ Download
+                </button>
+            </div>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor-container">
+            <div id="editor"></div>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Image Info</div>
+                    <div class="info-item">
+                        <span class="info-label">Format</span>
+                        <span class="info-value" id="imageFormat">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Dimensions</span>
+                        <span class="info-value" id="imageDimensions">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">File Size</span>
+                        <span class="info-value" id="imageSize">—</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Tools</div>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6;">
+                        Use the menu on the left to access all editing tools including crop, resize, rotate, flip, draw, text, and filters.
+                    </p>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Keyboard Shortcuts</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                        <div><strong>Ctrl+O</strong> — Open</div>
+                        <div><strong>Ctrl+S</strong> — Download</div>
+                        <div><strong>Ctrl+Z</strong> — Undo</div>
+                        <div><strong>Ctrl+Y</strong> — Redo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item">
+                    <span class="status-dot"></span>
+                    <span>Ready</span>
+                </div>
+                <div class="status-item" id="statusMessage">
+                    Load an image to get started
+                </div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                Pixelmuse v1.0
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="imageInput" accept="image/*">
+
+    <!-- Scripts -->
+    <script src="https://uicdn.toast.com/tui-color-picker/latest/tui-color-picker.js"></script>
+    <script src="https://uicdn.toast.com/tui-image-editor/latest/tui-image-editor.js"></script>
+
+    <script>
+        let imageEditor;
+        let currentImageData = null;
+
+        // Wait for libraries to load
+        function initializeEditor() {
+            if (typeof tui === 'undefined' || typeof tui.ImageEditor === 'undefined') {
+                setTimeout(initializeEditor, 50);
+                return;
+            }
+
+            // Initialize Image Editor
+            imageEditor = new tui.ImageEditor('#editor', {
+                includeUI: {
+                    loadImage: {
+                        path: '',
+                        name: 'Image'
+                    },
+                    theme: {
+                        'common.bi.image': '',
+                        'common.bisize.width': '0',
+                        'common.bisize.height': '0',
+                        'common.backgroundImage': 'none',
+                        'common.backgroundColor': '#1e293b',
+                        'common.border': '1px solid #334155'
+                    },
+                    menu: ['crop', 'resize', 'rotate', 'flip', 'draw', 'text', 'filter'],
+                    initMenu: 'crop',
+                    uiSize: {
+                        width: '100%',
+                        height: '100%'
+                    },
+                    menuBarPosition: 'left',
+                    locale: 'en'
+                },
+                cssMaxWidth: 1400,
+                cssMaxHeight: 900,
+                selectionStyle: {
+                    cornerSize: 20,
+                    rotatingPointOffset: 70
+                }
+            });
+
+            // Setup event listeners after editor is initialized
+            setupEventListeners();
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            const openFileBtn = document.getElementById('openFileBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const imageInput = document.getElementById('imageInput');
+
+            openFileBtn.addEventListener('click', () => imageInput.click());
+            downloadBtn.addEventListener('click', downloadImage);
+            resetBtn.addEventListener('click', resetEditor);
+            imageInput.addEventListener('change', handleImageUpload);
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'o') {
+                        e.preventDefault();
+                        imageInput.click();
+                    } else if (e.key === 's') {
+                        e.preventDefault();
+                        downloadImage();
+                    } else if (e.key === 'z' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (imageEditor) imageEditor.undo();
+                    } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+                        e.preventDefault();
+                        if (imageEditor) imageEditor.redo();
+                    }
+                }
+            });
+        }
+
+        // Handle Image Upload
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select a valid image file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    imageEditor.loadImageFromURL(event.target.result, file.name);
+                    currentImageData = {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type
+                    };
+                    updateImageInfo();
+                    updateStatus(`Loaded: ${file.name}`);
+                    showToast('Image loaded successfully', 'success');
+                } catch (error) {
+                    showToast('Failed to load image', 'error');
+                    console.error('Image load error:', error);
+                }
+            };
+            reader.onerror = () => {
+                showToast('Failed to read file', 'error');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Download Image
+        function downloadImage() {
+            if (!currentImageData) {
+                showToast('No image loaded', 'error');
+                return;
+            }
+
+            try {
+                const canvas = imageEditor.getImageData();
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    const timestamp = new Date().getTime();
+                    const filename = `edited-${timestamp}.png`;
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    showToast(`Downloaded: ${filename}`, 'success');
+                    updateStatus(`Downloaded: ${filename}`);
+                });
+            } catch (error) {
+                showToast('Failed to download image', 'error');
+                console.error('Download error:', error);
+            }
+        }
+
+        // Reset Editor
+        function resetEditor() {
+            if (!currentImageData) {
+                showToast('No image loaded', 'error');
+                return;
+            }
+
+            if (confirm('Reset all changes? This cannot be undone.')) {
+                try {
+                    imageEditor.resetZoom();
+                    updateStatus('Changes reset');
+                    showToast('All changes reset', 'success');
+                } catch (error) {
+                    showToast('Failed to reset', 'error');
+                    console.error('Reset error:', error);
+                }
+            }
+        }
+
+        // Update Image Info
+        function updateImageInfo() {
+            if (!currentImageData || !imageEditor) return;
+
+            const canvas = imageEditor.getImageData();
+            const width = canvas.width;
+            const height = canvas.height;
+            const size = (currentImageData.size / 1024).toFixed(2);
+            const format = currentImageData.type.split('/')[1].toUpperCase();
+
+            document.getElementById('imageDimensions').textContent = `${width}×${height}px`;
+            document.getElementById('imageSize').textContent = `${size}KB`;
+            document.getElementById('imageFormat').textContent = format;
+        }
+
+        // Update Status Message
+        function updateStatus(message) {
+            const statusMessage = document.getElementById('statusMessage');
+            if (statusMessage) statusMessage.textContent = message;
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Start initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeEditor);
+        } else {
+            initializeEditor();
+        }
+    </script>
+</body>
+
+</html>
